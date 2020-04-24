@@ -1,0 +1,71 @@
+---
+version: '3'
+
+volumes:
+  data-postgres: {}
+  data-opennms: {}
+
+services:
+
+  cassandra-01:
+    image: cassandra:3.11
+    container_name: cassandra-01
+    environment:
+      - CASSANDRA_CLUSTER_NAME=opennms-newts
+      - CASSANDRA_DC=opennms-lab
+      - CASSANDRA_RACK=opennms-lab-rack
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+      - LOCAL_JMX=false
+      - JMX_HOST=127.0.0.1
+    volumes:
+      - data-cassandra-01:/var/lib/cassandra
+    ports:
+      - "9042:9042"
+      - "7199:7199"
+
+  database:
+    image: postgres:12
+    container_name: database
+    environment:
+      - TZ=Europe/Berlin
+      - POSTGRES_HOST=database
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - data-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 30s
+      retries: 3
+
+  horizon:
+    image: opennms/horizon:bleeding
+    container_name: horizon
+    environment:
+      - TZ=Europe/Berlin
+      - POSTGRES_HOST=database
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - OPENNMS_DBNAME=opennms
+      - OPENNMS_DBUSER=opennms
+      - OPENNMS_DBPASS=opennms
+      - OPENNMS_TIMESERIES_STRATEGY=newts
+      - OPENNMS_CASSANDRA_HOSTNAMES=cassandra-01
+      - OPENNMS_CASSANDRA_KEYSPACE=newts
+      - OPENNMS_CASSANDRA_PORT=9042
+      - OPENNMS_CASSANDRA_USERNAME=cassandra
+      - OPENNMS_CASSANDRA_PASSWORD=cassandra
+    volumes:
+      - ./horizon-overlay:/opt/opennms-overlay
+    command: ["-s"]
+    ports:
+      - "8980:8980"
+      - "8101:8101"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "-I", "http://localhost:8980/opennms/login.jsp" ]
+      interval: 1m
+      timeout: 5s
+      retries: 3
