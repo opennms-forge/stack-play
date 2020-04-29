@@ -4,6 +4,7 @@ services:
   minion:
     image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-bleeding}
     container_name: minion
+    hostname: minion
     sysctls:
       net.ipv4.ping_group_range: "0 429496729"
     environment:

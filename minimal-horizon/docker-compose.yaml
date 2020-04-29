@@ -9,6 +9,7 @@ services:
   database:
     image: ${DOCKER_REGISTRY:-docker.io}/postgres:${POSTGRES_VERSION:-12}
     container_name: database
+    hostname: database
     environment:
       TZ: ${TIMEZONE:-America/New_York}
       POSTGRES_HOST: database
@@ -25,11 +26,12 @@ services:
 
   horizon:
     image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${HORIZON_OCI:-horizon}:${ONMS_VERSION:-bleeding}
+    container_name: horizon
+    hostname: horizon
     sysctls:
       net.ipv4.ping_group_range: "0 429496729"
     depends_on:
       - database
-    container_name: horizon
     environment:
       TZ: ${TIMEZONE:-America/New_York}
       POSTGRES_HOST: database

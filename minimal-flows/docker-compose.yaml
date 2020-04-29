@@ -11,6 +11,7 @@ services:
   database:
     image: ${DOCKER_REGISTRY:-docker.io}/postgres:${POSTGRES_VERSION:-12}
     container_name: database
+    hostname: database
     environment:
       TZ: ${TIMEZONE:-America/New_York}
       POSTGRES_HOST: database
@@ -28,6 +29,7 @@ services:
   es01:
     image: ${DOCKER_REGISTRY:-docker.elastic.co}/elasticsearch/elasticsearch:${ELASTICSEARCH_VERSION:-7.6.2}
     container_name: es01
+    hostname: es01
     environment:
      TZ: ${TIMEZONE:-America/New_York}
      discovery.type: single-node
@@ -47,6 +49,7 @@ services:
   horizon:
     image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${HORIZON_OCI:-horizon}:${ONMS_VERSION:-bleeding}
     container_name: horizon
+    hostname: horizon
     sysctls:
       net.ipv4.ping_group_range: "0 429496729"
     depends_on:
@@ -79,6 +82,7 @@ services:
   grafana:
     image: ${DOCKER_REGISTRY:-docker.io}/grafana/grafana:${GRAFANA_VERSION:-6.7.2}
     container_name: grafana
+    hostname: grafana
     depends_on: 
       - horizon
     environment:
@@ -93,6 +97,7 @@ services:
   kibana:
     image: ${DOCKER_REGISTRY:-docker.elastic.co}/kibana/kibana:${KIBANA_VERSION:-7.6.2}
     container_name: kibana
+    hostname: kibana
     depends_on: 
       - es01
     environment:

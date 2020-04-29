@@ -10,6 +10,7 @@ services:
   database:
     image: ${DOCKER_REGISTRY:-docker.io}/postgres:${POSTGRES_VERSION:-12}
     container_name: database
+    hostname: database
     environment:
       TZ: ${TIMEZONE:-America/New_York}
       POSTGRES_HOST: database
@@ -27,6 +28,7 @@ services:
   cassandra-01:
     image: ${DOCKER_REGISTRY:-docker.io}/cassandra:${CASSANDRA_VERSION:-3.11}
     container_name: cassandra-01
+    hostname: cassandra-01
     environment:
       TZ: ${TIMEZONE:-America/New_York}
       CASSANDRA_CLUSTER_NAME: opennms-newts
@@ -41,6 +43,7 @@ services:
   horizon:
     image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${HORIZON_OCI:-horizon}:${ONMS_VERSION:-bleeding}
     container_name: horizon
+    hostname: horizon
     depends_on: 
       - database
       - cassandra-01

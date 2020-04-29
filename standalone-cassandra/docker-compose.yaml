@@ -8,6 +8,7 @@ services:
   cassandra-01:
     image: ${DOCKER_REGISTRY:-docker.io}/cassandra:${CASSANDRA_VERSION:-3.11}
     container_name: cassandra-01
+    hostname: cassandra-01
     environment:
       TZ: ${TIMEZONE:-America/New_York}
       CASSANDRA_CLUSTER_NAME: opennms-newts
