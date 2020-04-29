@@ -94,7 +94,7 @@
 
     <!-- Multi-port listener for Netflow v5, Netflow v9, IPFIX and SFlow -->
     <listener name="Multi-UDP-4729" class-name="org.opennms.netmgt.telemetry.listeners.UdpListener" enabled="true">
-        <parameter key="port" value="9999"/>
+        <parameter key="port" value="4729"/>
 
         <parser name="Netflow-5-Parser" class-name="org.opennms.netmgt.telemetry.protocols.netflow.parser.Netflow5UdpParser" queue="Netflow-5" />
         <parser name="Netflow-9-Parser" class-name="org.opennms.netmgt.telemetry.protocols.netflow.parser.Netflow9UdpParser" queue="Netflow-9" />
