@@ -4,6 +4,7 @@ version: '3'
 volumes:
   data-postgres: {}
   data-opennms: {}
+  data-cassandra-01: {}
 
 services:
   cassandra-01:
