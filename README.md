@@ -3,11 +3,11 @@ This repository has some docker-compose container stacks for local labs or for p
 
 ## Usage
 
-By default we use bleeding container images latest SNAPSHOT.
-If you want to use stable versions, just source the stable.env file with:
+By default we use bleeding container images from latest SNAPSHOT.
+The OCI images are downloaded from [DockerHub](https://hub.docker.com/u/opennms).
+If you want to use other versions, just edit the image-cfg.env file and source it with:
 
 ```bash
-source stable.env
+source images-cfg.env
 ```
-It sets the environment variables and you can spinup the stacks with the latest stable versions.
-
+It sets the environment variables and you can spinup the stacks with the versions as specified.

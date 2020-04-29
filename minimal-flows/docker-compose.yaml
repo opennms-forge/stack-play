@@ -1,0 +1,107 @@
+---
+version: '3'
+
+volumes:
+  data-postgres: {}
+  data-opennms: {}
+  data-grafana: {}
+  data-es01: {}
+
+services:
+  database:
+    image: ${DOCKER_REGISTRY:-docker.io}/postgres:${POSTGRES_VERSION:-12}
+    container_name: database
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+      POSTGRES_HOST: database
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - data-postgres:/var/lib/postgresql/data:delegated
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 30s
+      retries: 3
+
+  es01:
+    image: ${DOCKER_REGISTRY:-docker.elastic.co}/elasticsearch/elasticsearch:${ELASTICSEARCH_VERSION:-7.6.2}
+    container_name: es01
+    environment:
+     TZ: ${TIMEZONE:-America/New_York}
+     discovery.type: single-node
+     node.name: es-node-01
+    ports:
+      - "9200:9200/tcp"
+      - "9300:9300/tcp"
+    volumes:
+      - data-es01:/usr/share/elasticsearch/data
+      - ./plugins:/usr/share/elasticsearch/plugins
+    healthcheck:
+      test: curl http://localhost:9200 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  horizon:
+    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${HORIZON_OCI:-horizon}:${ONMS_VERSION:-bleeding}
+    container_name: horizon
+    sysctls:
+      net.ipv4.ping_group_range: "0 429496729"
+    depends_on:
+      - database
+      - es01
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+      POSTGRES_HOST: database
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      OPENNMS_DBNAME: opennms
+      OPENNMS_DBUSER: opennms
+      OPENNMS_DBPASS: opennms
+    volumes:
+      - data-opennms:/opt/opennms/share/rrd
+      - ./horizon-overlay:/opt/opennms-overlay
+    command: ["-s"]
+    ports:
+      - "8980:8980"
+      - "8101:8101"
+      - "61616:61616/tcp"
+      - "4729:4729/udp"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "-I", "http://localhost:8980/opennms/login.jsp" ]
+      interval: 1m
+      timeout: 5s
+      retries: 3
+
+  grafana:
+    image: ${DOCKER_REGISTRY:-docker.io}/grafana/grafana:${GRAFANA_VERSION:-6.7.2}
+    container_name: grafana
+    depends_on: 
+      - horizon
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+      GF_SECURITY_ADMIN_PASSWORD: mypass
+      GF_INSTALL_PLUGINS: https://github.com/OpenNMS/opennms-helm/archive/v5.0.2.zip;grafana-piechart-panel;neocat-cal-heatmap-panel
+    volumes:
+      - data-grafana:/var/lib/grafana
+    ports:
+      - "3000:3000/tcp"
+
+  kibana:
+    image: ${DOCKER_REGISTRY:-docker.elastic.co}/kibana/kibana:${KIBANA_VERSION:-7.6.2}
+    container_name: kibana
+    depends_on: 
+      - es01
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+      ELASTICSEARCH_HOSTS: http://es01:9200
+    ports:
+      - "5601:5601/tcp"
+    healthcheck:
+      test: curl http://localhost:5601 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      interval: 30s
+      timeout: 10s
+      retries: 50
