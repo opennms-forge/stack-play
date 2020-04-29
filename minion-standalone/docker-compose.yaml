@@ -2,7 +2,7 @@
 version: '3'
 services:
   minion:
-    image: opennms/minion:${MINION_VERSION:-bleeding}
+    image: opennms/minion:${HORIZON_VERSION:-bleeding}
     container_name: minion
     sysctls:
       net.ipv4.ping_group_range: "0 429496729"
