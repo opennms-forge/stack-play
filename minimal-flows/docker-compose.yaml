@@ -27,7 +27,7 @@ services:
       retries: 3
 
   es01:
-    image: ${DOCKER_REGISTRY:-docker.elastic.co}/elasticsearch/elasticsearch:${ELASTICSEARCH_VERSION:-7.6.2}
+    image: ${DOCKER_REGISTRY:-docker.elastic.co}/elasticsearch:${ELASTICSEARCH_VERSION:-7.6.2}
     container_name: es01
     hostname: es01
     environment:
@@ -97,7 +97,7 @@ services:
       - "3000:3000/tcp"
 
   kibana:
-    image: ${DOCKER_REGISTRY:-docker.elastic.co}/kibana/kibana:${KIBANA_VERSION:-7.6.2}
+    image: ${DOCKER_REGISTRY:-docker.elastic.co}/kibana:${KIBANA_VERSION:-7.6.2}
     container_name: kibana
     hostname: kibana
     depends_on: 
