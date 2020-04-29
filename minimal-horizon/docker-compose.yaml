@@ -7,7 +7,7 @@ volumes:
 
 services:
   database:
-    image: postgres:12
+    image: postgres:${POSTGRES_VERSION:-12}
     container_name: database
     environment:
       - TZ=Europe/Berlin
@@ -24,7 +24,9 @@ services:
       retries: 3
 
   horizon:
-    image: opennms/horizon:bleeding
+    image: opennms/horizon:${HORIZON_VERSION:-bleeding}
+    sysctls:
+      net.ipv4.ping_group_range: "0 429496729"
     container_name: horizon
     environment:
       - TZ=Europe/Berlin

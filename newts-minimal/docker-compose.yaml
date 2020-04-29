@@ -6,9 +6,8 @@ volumes:
   data-opennms: {}
 
 services:
-
   cassandra-01:
-    image: cassandra:3.11
+    image: cassandra:${CASSANDRA_VERSION:-3.11}
     container_name: cassandra-01
     environment:
       - CASSANDRA_CLUSTER_NAME=opennms-newts
@@ -24,7 +23,7 @@ services:
       - "7199:7199"
 
   database:
-    image: postgres:12
+    image: postgres:${POSTGRES_VERSION:-12}
     container_name: database
     environment:
       - TZ=Europe/Berlin
@@ -41,8 +40,10 @@ services:
       retries: 3
 
   horizon:
-    image: opennms/horizon:bleeding
+    image: opennms/horizon:${HORIZON_VERSION:-bleeding}
     container_name: horizon
+    sysctls:
+      net.ipv4.ping_group_range: "0 429496729"
     environment:
       - TZ=Europe/Berlin
       - POSTGRES_HOST=database

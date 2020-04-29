@@ -6,7 +6,7 @@ volumes:
 
 services:
   cassandra-01:
-    image: cassandra:3.11
+    image: cassandra:${CASSANDRA_VERSION:-3.11}
     container_name: cassandra-01
     environment:
       - CASSANDRA_CLUSTER_NAME=opennms-newts
