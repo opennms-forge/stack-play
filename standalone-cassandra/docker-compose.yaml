@@ -15,7 +15,7 @@ services:
       CASSANDRA_DC: opennms-lab
       CASSANDRA_RACK: opennms-lab-rack
       CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
-      LOCAL_JMX: false
+      LOCAL_JMX: 'false'
       JMX_HOST: 127.0.0.1
     volumes:
       - data-cassandra-01:/var/lib/cassandra
