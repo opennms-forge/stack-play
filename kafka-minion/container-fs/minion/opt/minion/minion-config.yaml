@@ -1,0 +1,29 @@
+---
+http-url: "http://horizon:8980/opennms"
+id: "minion-01"
+location: "minion-location"
+
+ipc:
+  rpc:
+    kafka:
+      boostrap.servers: "broker:29092"
+      acks: 1
+      max.request.size: 5000000
+
+  sink:
+    kafka:
+      boostrap.servers: "broker:29092"
+      compression.type: "gzip"
+      request.timeout.ms: 30000
+      max.partition.fetch.bytes: 5000000
+      auto.offset.reset: "latest"
+      max.request.size: 5000000
+
+netmgt:
+  syslog:
+    syslog.listen.interface: "0.0.0.0"
+    syslog.listen.port: 1514
+
+  traps:
+    trapd.listen.interface: "0.0.0.0"
+    trapd.listen.port: 1162
