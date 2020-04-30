@@ -38,9 +38,9 @@ services:
     volumes:
       - data-opennms:/opennms-data
       - data-opennms-cfg:/opt/opennms/etc
-      - ./container-fs/opt/opennms/deploy:/opt/opennms/deploy
-      - ./container-fs/opt/opennms-overlay:/opt/opennms-overlay
-      - ./container-fs/etc/conf.d/confd.toml:/etc/confd/confd.toml
+      - ./container-fs/horizon/opt/opennms/deploy:/opt/opennms/deploy
+      - ./container-fs/horizon/opt/opennms-overlay:/opt/opennms-overlay
+      - ./container-fs/horizon/etc/conf.d/confd.toml:/etc/confd/confd.toml
     command: ["-s"]
     ports:
       - "8101:8101/tcp"
@@ -51,3 +51,26 @@ services:
       interval: 1m
       timeout: 5s
       retries: 3
+
+  minion:
+    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-bleeding}
+    container_name: minion
+    hostname: minion
+    sysctls:
+      net.ipv4.ping_group_range: "0 429496729"
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+      JAVA_MIN_MEM: 512M
+      JAVA_MAX_MEM: 2048M
+    volumes:
+      - ./container-fs/minion/opt/minion/minion-config.yaml:/opt/minion/minion-config.yaml
+    command: ["-f"]
+    healthcheck:
+      test: "/health.sh"
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    ports:
+      - "8102:8102/tcp"
+      - "1162:1162/udp"
+      - "1514:1514/udp"

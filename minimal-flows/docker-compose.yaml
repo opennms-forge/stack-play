@@ -4,6 +4,7 @@ version: '3'
 volumes:
   data-postgres: {}
   data-opennms: {}
+  data-opennms-cfg: {}
   data-grafana: {}
   data-es01: {}
 
@@ -66,14 +67,15 @@ services:
       OPENNMS_DBPASS: opennms
     volumes:
       - data-opennms:/opennms-data
+      - data-opennms-cfg:/opt/opennms/etc
       - ./container-fs/opt/opennms/deploy:/opt/opennms/deploy
       - ./container-fs/opt/opennms-overlay:/opt/opennms-overlay
       - ./container-fs/etc/conf.d/confd.toml:/etc/confd/confd.toml      
     command: ["-s"]
     ports:
-      - "8980:8980"
-      - "8101:8101"
-      - "61616:61616/tcp"
+      - "8101:8101/tcp"
+      - "8980:8980/tcp"
+      - "10162:1162/udp"
       - "4729:4729/udp"
     healthcheck:
       test: [ "CMD", "curl", "-f", "-I", "http://localhost:8980/opennms/login.jsp" ]
