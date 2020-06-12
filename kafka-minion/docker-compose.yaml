@@ -94,7 +94,6 @@ services:
       JAVA_MIN_MEM: 512M
       JAVA_MAX_MEM: 2048M
     volumes:
-      - ./container-fs/minion/opt/minion-etc-overlay:/opt/minion-etc-overlay
       - ./container-fs/minion/opt/minion/minion-config.yaml:/opt/minion/minion-config.yaml
     command: ["-f"]
     healthcheck:
