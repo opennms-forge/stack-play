@@ -46,6 +46,7 @@ services:
       - "8101:8101/tcp"
       - "8980:8980/tcp"
       - "10162:1162/udp"
+      - "61616:61616/tcp"
     healthcheck:
       test: [ "CMD", "curl", "-f", "-I", "http://localhost:8980/opennms/login.jsp" ]
       interval: 1m
