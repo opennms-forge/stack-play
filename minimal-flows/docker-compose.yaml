@@ -58,13 +58,6 @@ services:
       - es01
     environment:
       TZ: ${TIMEZONE:-America/New_York}
-      POSTGRES_HOST: database
-      POSTGRES_PORT: 5432
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      OPENNMS_DBNAME: opennms
-      OPENNMS_DBUSER: opennms
-      OPENNMS_DBPASS: opennms
     volumes:
       - data-opennms:/opennms-data
       - data-opennms-cfg:/opt/opennms/etc
