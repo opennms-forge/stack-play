@@ -1,0 +1,29 @@
+---
+version: '3'
+
+volumes:
+  data-cortex: {}
+  data-grafana: {}
+
+services:
+  cortex:
+    image: cortexproject/cortex:v1.1.0
+    container_name: cortex
+    volumes:
+      - "data-cortex:/tmp/cortex"
+      - "./single-process-config.yaml:/etc/single-process-config.yaml"
+    command: [ "-config.file=/etc/single-process-config.yaml" ]
+    ports:
+      - "9009:9009/tcp"
+
+  grafana:
+    image: ${DOCKER_REGISTRY:-docker.io}/grafana/grafana:${GRAFANA_VERSION:-6.7.2}
+    container_name: grafana
+    hostname: grafana
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+      GF_SECURITY_ADMIN_PASSWORD: mypass
+    volumes:
+      - data-grafana:/var/lib/grafana
+    ports:
+      - "3000:3000/tcp"
