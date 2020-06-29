@@ -1,26 +1,19 @@
 ---
 version: '3'
+
+volumes:
+  data-grafana: {}
+
 services:
-  minion:
-    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-bleeding}
-    container_name: minion
-    hostname: minion
-    sysctls:
-      net.ipv4.ping_group_range: "0 429496729"
+  grafana:
+    image: ${DOCKER_REGISTRY:-docker.io}/grafana/grafana:${GRAFANA_VERSION:-6.7.2}
+    container_name: grafana
+    hostname: grafana
     environment:
       TZ: ${TIMEZONE:-America/New_York}
-      JAVA_MIN_MEM: 512M
-      JAVA_MAX_MEM: 2048M
+      GF_SECURITY_ADMIN_PASSWORD: mypass
+      GF_INSTALL_PLUGINS: https://github.com/OpenNMS/opennms-helm/archive/v5.0.2.zip;grafana-piechart-panel;neocat-cal-heatmap-panel
     volumes:
-      - ./minion-config.yaml:/opt/minion/minion-config.yaml
-    command: ["-f"]
-    healthcheck:
-      test: "/health.sh"
-      interval: 30s
-      timeout: 20s
-      retries: 3
+      - data-grafana:/var/lib/grafana
     ports:
-      - "8102:8102/tcp"
-      - "1162:1162/udp"
-      - "1514:1514/udp"
-      - "4729:4729/udp"
+      - "3000:3000/tcp"
