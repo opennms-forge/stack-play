@@ -7,7 +7,7 @@ volumes:
 
 services:
   cortex:
-    image: cortexproject/cortex:v1.1.0
+    image: ${DOCKER_REGISTRY:-docker.io}/cortexproject/cortex:${CORTEX_VERSION:-v1.2.0-rc.1}
     container_name: cortex
     volumes:
       - "data-cortex:/tmp/cortex"
@@ -15,6 +15,7 @@ services:
     command: [ "-config.file=/etc/single-process-config.yaml" ]
     ports:
       - "9009:9009/tcp"
+      - "9095:9095/tcp"
 
   grafana:
     image: ${DOCKER_REGISTRY:-docker.io}/grafana/grafana:${GRAFANA_VERSION:-6.7.2}
