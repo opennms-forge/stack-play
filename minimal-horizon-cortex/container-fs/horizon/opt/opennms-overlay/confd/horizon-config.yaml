@@ -12,7 +12,7 @@ opennms:
     dbpass: opennms
 
   timeseries:
-    strategy: rrd
+    strategy: integration
 
   rrd:
     storebyforeignsource: true
