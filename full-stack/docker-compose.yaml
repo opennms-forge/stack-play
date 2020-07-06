@@ -1,0 +1,179 @@
+---
+version: '3'
+
+volumes:
+  data-postgres: {}
+  data-opennms: {}
+  data-opennms-cfg: {}
+  data-grafana: {}
+  data-es01: {}
+  data-cassandra-01: {}
+
+services:
+  zookeeper:
+    image: ${DOCKER_REGISTRY:-docker.io}/confluentinc/cp-zookeeper:${ZOOKEEPER_VERSION:-5.5.0}
+    container_name: zookeeper
+    hostname: zookeeper
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  broker:
+    image: ${DOCKER_REGISTRY:-docker.io}/confluentinc/cp-kafka:${KAFKA_VERSION:-5.5.0}
+    container_name: broker
+    hostname: broker
+    depends_on:
+      - zookeeper
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    ports:
+      - "29092:29092/tcp"
+      - "9092:9092/tcp"
+
+  database:
+    image: ${DOCKER_REGISTRY:-docker.io}/postgres:${POSTGRES_VERSION:-12}
+    container_name: database
+    hostname: database
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+      POSTGRES_HOST: database
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - data-postgres:/var/lib/postgresql/data:delegated
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 30s
+      retries: 3
+
+  es01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTICSEARCH_VERSION:-7.6.2}
+    container_name: es01
+    hostname: es01
+    environment:
+     TZ: ${TIMEZONE:-America/New_York}
+     discovery.type: single-node
+     node.name: es-node-01
+    ports:
+      - "9200:9200/tcp"
+      - "9300:9300/tcp"
+    volumes:
+      - data-es01:/usr/share/elasticsearch/data
+      - ./container-fs/es01/plugins:/usr/share/elasticsearch/plugins
+    healthcheck:
+      test: curl http://localhost:9200 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  cassandra-01:
+    image: ${DOCKER_REGISTRY:-docker.io}/cassandra:${CASSANDRA_VERSION:-3.11}
+    container_name: cassandra-01
+    hostname: cassandra-01
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+      CASSANDRA_CLUSTER_NAME: opennms-newts
+      CASSANDRA_DC: opennms-lab
+      CASSANDRA_RACK: opennms-lab-rack
+      CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+      LOCAL_JMX: 'false'
+      JMX_HOST: 127.0.0.1
+    volumes:
+      - data-cassandra-01:/var/lib/cassandra
+
+  horizon:
+    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${HORIZON_OCI:-horizon}:${ONMS_VERSION:-bleeding}
+    container_name: horizon
+    hostname: horizon
+    sysctls:
+      net.ipv4.ping_group_range: "0 429496729"
+    depends_on:
+      - database
+      - es01
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+      REPLICATION_FACTOR: 1
+      OPENNMS_TIMESERIES_STRATEGY: newts
+    volumes:
+      - data-opennms:/opennms-data
+      - data-opennms-cfg:/opt/opennms/etc
+      - ./container-fs/horizon/opt/opennms/deploy:/opt/opennms/deploy
+      - ./container-fs/horizon/opt/opennms-overlay:/opt/opennms-overlay
+      - ./container-fs/horizon/etc/conf.d/confd.toml:/etc/confd/confd.toml      
+    command: ["-s"]
+    ports:
+      - "8101:8101/tcp"
+      - "8980:8980/tcp"
+      - "10162:1162/udp"
+      - "4729:4729/udp"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "-I", "http://localhost:8980/opennms/login.jsp" ]
+      interval: 1m
+      timeout: 5s
+      retries: 3
+
+  minion:
+    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-bleeding}
+    container_name: minion
+    hostname: minion
+    sysctls:
+      net.ipv4.ping_group_range: "0 429496729"
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+      JAVA_MIN_MEM: 512M
+      JAVA_MAX_MEM: 2048M
+    volumes:
+      - ./container-fs/minion/opt/minion/minion-config.yaml:/opt/minion/minion-config.yaml
+    command: ["-f"]
+    healthcheck:
+      test: "/health.sh"
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    ports:
+      - "8102:8102/tcp"
+      - "1162:1162/udp"
+      - "1514:1514/udp"
+
+  grafana:
+    image: ${DOCKER_REGISTRY:-docker.io}/grafana/grafana:${GRAFANA_VERSION:-6.7.2}
+    container_name: grafana
+    hostname: grafana
+    depends_on: 
+      - horizon
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+      GF_SECURITY_ADMIN_PASSWORD: mypass
+      GF_INSTALL_PLUGINS: https://github.com/OpenNMS/opennms-helm/archive/v5.0.2.zip;grafana-piechart-panel;neocat-cal-heatmap-panel
+    volumes:
+      - data-grafana:/var/lib/grafana
+    ports:
+      - "3000:3000/tcp"
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:${KIBANA_VERSION:-7.6.2}
+    container_name: kibana
+    hostname: kibana
+    depends_on: 
+      - es01
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+      ELASTICSEARCH_HOSTS: http://es01:9200
+    ports:
+      - "5601:5601/tcp"
+    healthcheck:
+      test: curl http://localhost:5601 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      interval: 30s
+      timeout: 10s
+      retries: 50
