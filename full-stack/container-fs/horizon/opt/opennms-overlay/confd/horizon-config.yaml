@@ -3,7 +3,7 @@ postgres:
   host: database
   port: 5432
   user: postgres
-  pass: postgres
+  password: postgres
 
 opennms:
   database:
