@@ -6,10 +6,9 @@ postgres:
   password: postgres
 
 opennms:
-  database:
-    dbname: opennms
-    dbuser: opennms
-    dbpass: opennms
+  dbname: opennms
+  dbuser: opennms
+  dbpass: opennms
 
   timeseries:
     strategy: integration
