@@ -1,0 +1,244 @@
+---
+version: '3'
+
+volumes:
+  data-postgres: {}
+  data-opennms: {}
+  data-opennms-cfg: {}
+
+networks:
+  net-core:
+    ipam:
+      config:
+        - subnet: 192.168.1.0/24
+
+  net-transit:
+    ipam:
+      config:
+        - subnet: 10.1.1.0/24
+
+  net-minion-lo1:
+    ipam:
+      config:
+        - subnet: 192.168.10.0/24
+
+  net-minion-lo2:
+    ipam:
+      config:
+        - subnet: 192.168.20.0/24
+
+  net-minion-lo3:
+    ipam:
+      config:
+        - subnet: 192.168.30.0/24
+
+services:
+  database:
+    image: ${DOCKER_REGISTRY:-docker.io}/postgres:${POSTGRES_VERSION:-12}
+    container_name: database
+    hostname: database
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+      POSTGRES_HOST: database
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - data-postgres:/var/lib/postgresql/data
+    networks:
+      net-core:
+        ipv4_address: 192.168.1.10
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 30s
+      retries: 3
+
+  horizon:
+    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${HORIZON_OCI:-horizon}:${ONMS_VERSION:-bleeding}
+    container_name: horizon
+    hostname: horizon
+    sysctls:
+      net.ipv4.ping_group_range: "0 429496729"
+    depends_on:
+      - database
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+    volumes:
+      - data-opennms:/opennms-data
+      - data-opennms-cfg:/opt/opennms/etc
+      - ./container-fs/horizon/opt/opennms/deploy:/opt/opennms/deploy
+      - ./container-fs/horizon/opt/opennms-overlay:/opt/opennms-overlay
+      - ./container-fs/horizon/etc/conf.d/confd.toml:/etc/confd/confd.toml
+    networks:
+      net-core:
+        ipv4_address: 192.168.1.11
+      net-transit:
+        ipv4_address: 10.1.1.11
+    command: ["-s"]
+    ports:
+      - "8101:8101/tcp"
+      - "8980:8980/tcp"
+      - "10162:1162/udp"
+      - "61616:61616/tcp"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "-I", "http://localhost:8980/opennms/login.jsp" ]
+      interval: 1m
+      timeout: 5s
+      retries: 3
+
+  minion-lo1-1:
+    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-bleeding}
+    container_name: minion-lo1-1
+    hostname: minion-lo1-1
+    sysctls:
+      net.ipv4.ping_group_range: "0 429496729"
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+      JAVA_MIN_MEM: 512M
+      JAVA_MAX_MEM: 2048M
+    volumes:
+      - ./container-fs/minion-lo1-1/opt/minion/minion-config.yaml:/opt/minion/minion-config.yaml
+    networks:
+      net-minion-lo1:
+        ipv4_address: 192.168.10.11
+      net-transit:
+        ipv4_address: 10.1.1.111
+    command: ["-f"]
+    healthcheck:
+      test: "/health.sh"
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    ports:
+      - "8111:8102/tcp"
+
+  minion-lo1-2:
+    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-bleeding}
+    container_name: minion-lo1-2
+    hostname: minion-lo1-2
+    sysctls:
+      net.ipv4.ping_group_range: "0 429496729"
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+      JAVA_MIN_MEM: 512M
+      JAVA_MAX_MEM: 2048M
+    volumes:
+      - ./container-fs/minion-lo1-2/opt/minion/minion-config.yaml:/opt/minion/minion-config.yaml
+    networks:
+      net-minion-lo1:
+        ipv4_address: 192.168.10.12
+      net-transit:
+        ipv4_address: 10.1.1.112
+    command: ["-f"]
+    healthcheck:
+      test: "/health.sh"
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    ports:
+      - "8112:8102/tcp"
+
+  minion-lo1-3:
+    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-bleeding}
+    container_name: minion-lo1-3
+    hostname: minion-lo1-3
+    sysctls:
+      net.ipv4.ping_group_range: "0 429496729"
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+      JAVA_MIN_MEM: 512M
+      JAVA_MAX_MEM: 2048M
+    volumes:
+      - ./container-fs/minion-lo1-3/opt/minion/minion-config.yaml:/opt/minion/minion-config.yaml
+    networks:
+      net-minion-lo1:
+        ipv4_address: 192.168.10.13
+      net-transit:
+        ipv4_address: 10.1.1.113
+    command: ["-f"]
+    healthcheck:
+      test: "/health.sh"
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    ports:
+      - "8113:8102/tcp"
+
+  minion-lo2-1:
+    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-bleeding}
+    container_name: minion-lo2-1
+    hostname: minion-lo2-1
+    sysctls:
+      net.ipv4.ping_group_range: "0 429496729"
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+      JAVA_MIN_MEM: 512M
+      JAVA_MAX_MEM: 2048M
+    volumes:
+      - ./container-fs/minion-lo2-1/opt/minion/minion-config.yaml:/opt/minion/minion-config.yaml
+    networks:
+      net-minion-lo2:
+        ipv4_address: 192.168.20.11
+      net-transit:
+        ipv4_address: 10.1.1.121
+    command: ["-f"]
+    healthcheck:
+      test: "/health.sh"
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    ports:
+      - "8121:8102/tcp"
+
+  minion-lo2-2:
+    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-bleeding}
+    container_name: minion-lo2-2
+    hostname: minion-lo2-2
+    sysctls:
+      net.ipv4.ping_group_range: "0 429496729"
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+      JAVA_MIN_MEM: 512M
+      JAVA_MAX_MEM: 2048M
+    volumes:
+      - ./container-fs/minion-lo2-2/opt/minion/minion-config.yaml:/opt/minion/minion-config.yaml
+    networks:
+      net-minion-lo2:
+        ipv4_address: 192.168.20.12
+      net-transit:
+        ipv4_address: 10.1.1.122
+    command: ["-f"]
+    healthcheck:
+      test: "/health.sh"
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    ports:
+      - "8122:8102/tcp"
+
+  minion-lo3-1:
+    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-bleeding}
+    container_name: minion-lo3-1
+    hostname: minion-lo3-1
+    sysctls:
+      net.ipv4.ping_group_range: "0 429496729"
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+      JAVA_MIN_MEM: 512M
+      JAVA_MAX_MEM: 2048M
+    volumes:
+      - ./container-fs/minion-lo3-1/opt/minion/minion-config.yaml:/opt/minion/minion-config.yaml
+    networks:
+      net-minion-lo3:
+        ipv4_address: 192.168.30.11
+      net-transit:
+        ipv4_address: 10.1.1.131
+    command: ["-f"]
+    healthcheck:
+      test: "/health.sh"
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    ports:
+      - "8131:8102/tcp"
