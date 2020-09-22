@@ -1,0 +1,19 @@
+---
+version: '3'
+
+volumes:
+  data-activemq: {}
+
+services:
+  database:
+    image: ${DOCKER_REGISTRY:-docker.io}/no42org/activemq:${ACTIVEMQ_VERSION:-5.16.0.1360}
+    container_name: activemq
+    hostname: activemq
+    environment:
+      TZ: '${TIMEZONE:-America/New_York}'
+    volumes:
+      - 'data-activemq:/opt/activemq/data'
+      - './container-fs/activemq.xml:/opt/activemq/conf/activemq.xml'
+    ports:
+      - '61616:61616/tcp'
+
