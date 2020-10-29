@@ -10,7 +10,7 @@ volumes:
 
 services:
   database:
-    image: ${DOCKER_REGISTRY:-docker.io}/postgres:${POSTGRES_VERSION:-12}
+    image: ${DOCKER_REGISTRY:-docker.io}/postgres:${POSTGRES_VERSION:-13}
     container_name: database
     hostname: database
     environment:
