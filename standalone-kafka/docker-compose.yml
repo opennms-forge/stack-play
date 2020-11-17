@@ -3,7 +3,7 @@ version: '3'
 
 services:
   zookeeper:
-    image: ${DOCKER_REGISTRY:-docker.io}/confluentinc/cp-zookeeper:${ZOOKEEPER_VERSION:-5.5.0}
+    image: ${DOCKER_REGISTRY:-docker.io}/confluentinc/cp-zookeeper:${ZOOKEEPER_VERSION:-latest}
     container_name: zookeeper
     hostname: zookeeper
     environment:
@@ -12,7 +12,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
 
   broker:
-    image: ${DOCKER_REGISTRY:-docker.io}/confluentinc/cp-kafka:${KAFKA_VERSION:-5.5.0}
+    image: ${DOCKER_REGISTRY:-docker.io}/confluentinc/cp-kafka:${KAFKA_VERSION:-latest}
     container_name: broker
     hostname: broker
     depends_on:

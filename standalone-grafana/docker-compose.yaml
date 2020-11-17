@@ -6,13 +6,13 @@ volumes:
 
 services:
   grafana:
-    image: ${DOCKER_REGISTRY:-docker.io}/grafana/grafana:${GRAFANA_VERSION:-6.7.2}
+    image: ${DOCKER_REGISTRY:-docker.io}/grafana/grafana:${GRAFANA_VERSION:-latest}
     container_name: grafana
     hostname: grafana
     environment:
       TZ: ${TIMEZONE:-America/New_York}
       GF_SECURITY_ADMIN_PASSWORD: mypass
-      GF_INSTALL_PLUGINS: https://github.com/OpenNMS/opennms-helm/archive/v5.0.2.zip;grafana-piechart-panel;neocat-cal-heatmap-panel
+      GF_INSTALL_PLUGINS: https://github.com/OpenNMS/opennms-helm/archive/v6.0.0.zip;grafana-piechart-panel;neocat-cal-heatmap-panel
     volumes:
       - data-grafana:/var/lib/grafana
     ports:
