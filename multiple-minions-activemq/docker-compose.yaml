@@ -111,7 +111,7 @@ services:
       timeout: 20s
       retries: 3
     ports:
-      - "8111:8102/tcp"
+      - "8111:8201/tcp"
 
   minion-lo1-2:
     image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-bleeding}
@@ -137,7 +137,7 @@ services:
       timeout: 20s
       retries: 3
     ports:
-      - "8112:8102/tcp"
+      - "8112:8201/tcp"
 
   minion-lo1-3:
     image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-bleeding}
@@ -163,7 +163,7 @@ services:
       timeout: 20s
       retries: 3
     ports:
-      - "8113:8102/tcp"
+      - "8113:8201/tcp"
 
   minion-lo2-1:
     image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-bleeding}
@@ -189,7 +189,7 @@ services:
       timeout: 20s
       retries: 3
     ports:
-      - "8121:8102/tcp"
+      - "8121:8201/tcp"
 
   minion-lo2-2:
     image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-bleeding}
@@ -215,7 +215,7 @@ services:
       timeout: 20s
       retries: 3
     ports:
-      - "8122:8102/tcp"
+      - "8122:8201/tcp"
 
   minion-lo3-1:
     image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-bleeding}
@@ -241,4 +241,4 @@ services:
       timeout: 20s
       retries: 3
     ports:
-      - "8131:8102/tcp"
+      - "8131:8201/tcp"

@@ -102,6 +102,6 @@ services:
       timeout: 20s
       retries: 3
     ports:
-      - "8102:8102/tcp"
+      - "8201:8201/tcp"
       - "1162:1162/udp"
       - "1514:1514/udp"
