@@ -36,7 +36,7 @@ services:
     container_name: kafka-ui
     hostname: kafka-ui
     environment:
-      TZ: Europe/Berlin
+      TZ: ${TIMEZONE:-America/New_York}
       KAFKA_CLUSTERS_0_NAME: onms-stack-play
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: broker:29092
       KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
