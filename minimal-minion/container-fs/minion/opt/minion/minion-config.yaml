@@ -4,6 +4,11 @@ broker-url: "failover:tcp://horizon:61616"
 id: "minion-01"
 location: "minion-location"
 
+karaf:
+  shell:
+    ssh:
+      host: "0.0.0.0"
+
 netmgt:
   syslog:
     syslog.listen.interface: "0.0.0.0"
