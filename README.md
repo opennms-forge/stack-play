@@ -29,7 +29,7 @@ Change into a stack directory you want.
 cd minimal-flows
 ```
 
-Download a `horizon.oci` artifact from a branch from [CircleCI](https://app.circleci.com/pipelines/github/OpenNMS/opennms) which is created from the `horizon-rpm-build`.
+Download a `horizon.oci` artifact from a branch from [CircleCI](https://app.circleci.com/pipelines/github/OpenNMS/opennms) which is created from the `horizon-rpm-build` job.
 Load the OCI image into your docker environment with `docker image load -i horizon.oci`, it will be loaded with the tag `horizon:latest`.
 
 Create a `docker-compose.override.yaml` and override the image tag for the horizon service:
