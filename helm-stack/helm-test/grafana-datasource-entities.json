@@ -1,0 +1,18 @@
+{
+  "id": 1,
+  "uid": "Pe7cGxonz",
+  "orgId": 1,
+  "name": "OpenNMS Entities",
+  "type": "opennms-helm-entity-datasource",
+  "typeName": "OpenNMS Entities",
+  "typeLogoUrl": "public/plugins/opennms-helm-entity-datasource/img/entity-ds.svg",
+  "access": "proxy",
+  "url": "http://horizon:8980/opennms",
+  "password": "",
+  "user": "",
+  "database": "",
+  "basicAuth": true,
+  "isDefault": true,
+  "jsonData": {},
+  "readOnly": false
+}
