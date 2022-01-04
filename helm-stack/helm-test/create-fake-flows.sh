@@ -10,6 +10,7 @@ fi
 echo "downloading populator jar"
 wget --quiet -c -O /tmp/nephron-testing-bundled.jar https://www.opennms.com/~ranger/helm-test/nephron-testing-bundled-0.3.2-SNAPSHOT.jar
 
+echo "setup index template for netflow index"
+curl -XPUT -H 'Content-Type: application/json' http://localhost:9200/_template/netflow -d@netflow-template.json
 echo "creating fake flows in elasticsearch"
 java -jar /tmp/nephron-testing-bundled.jar --esRawFlowOutput=ELASTIC_SEARCH
-curl -XPUT -H 'Content-Type: application/json' http://localhost:9200/_template/netflow -d@netflow-template.json
