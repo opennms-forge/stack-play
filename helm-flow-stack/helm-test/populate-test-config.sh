@@ -3,8 +3,8 @@
 CURRENT_EPOCH="$(date '+%s')000"
 
 echo "requisitioning test nodes"
-curl -X POST -H 'Content-type: application/json' -u admin:admin -d@grafana-test.json 'http://localhost:8980/opennms/rest/requisitions'
-curl -X PUT  -H 'Content-type: application/json' -u admin:admin                      'http://localhost:8980/opennms/rest/requisitions/grafana-test/import?rescanExisting=dbonly'
+curl -X POST -H 'Content-type: application/json' -u admin:admin -d@opennms-requisition.json 'http://localhost:8980/opennms/rest/requisitions'
+curl -X PUT  -H 'Content-type: application/json' -u admin:admin                             'http://localhost:8980/opennms/rest/requisitions/grafana-test/import?rescanExisting=dbonly'
 
 echo "waiting for database to settle"
 sleep 20
