@@ -1,0 +1,18 @@
+{
+  "id": 3,
+  "uid": "13NtGbonz",
+  "orgId": 1,
+  "name": "OpenNMS Performance",
+  "type": "opennms-helm-performance-datasource",
+  "typeName": "OpenNMS Performance",
+  "typeLogoUrl": "public/plugins/opennms-helm-performance-datasource/img/pm-ds.svg",
+  "access": "proxy",
+  "url": "http://horizon:8980/opennms",
+  "password": "",
+  "user": "",
+  "database": "",
+  "basicAuth": true,
+  "isDefault": false,
+  "jsonData": {},
+  "readOnly": false
+}
