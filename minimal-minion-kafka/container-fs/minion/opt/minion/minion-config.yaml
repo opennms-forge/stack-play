@@ -1,5 +1,4 @@
 ---
-http-url: "http://horizon:8980/opennms"
 id: "minion-01"
 location: "minion-location"
 
@@ -15,6 +14,11 @@ ipc:
       acks: 1
 
   sink:
+    kafka:
+      bootstrap.servers: "broker:29092"
+      acks: 1
+
+  twin:
     kafka:
       bootstrap.servers: "broker:29092"
       acks: 1
