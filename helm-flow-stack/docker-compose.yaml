@@ -3,8 +3,6 @@ version: '3'
 
 volumes:
   data-postgres: {}
-  data-opennms: {}
-  data-opennms-cfg: {}
   data-grafana: {}
   data-es01: {}
 
@@ -27,8 +25,9 @@ services:
       timeout: 30s
       retries: 3
 
+  #Mac M1 needs to use elasticsearch for arm64 (7.10.2 is the earliest version made for arm64, might need apend -arm64 in the version)
   es01:
-    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTICSEARCH_VERSION:-7.6.2}
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTICSEARCH_VERSION:-7.10.2}
     container_name: es01
     hostname: es01
     environment:
@@ -59,9 +58,6 @@ services:
     environment:
       TZ: ${TIMEZONE:-America/New_York}
     volumes:
-      - data-opennms:/opennms-data
-      - data-opennms-cfg:/opt/opennms/etc
-      - ./container-fs/opt/opennms/deploy:/opt/opennms/deploy
       - ./container-fs/opt/opennms-overlay:/opt/opennms-overlay
       - ./container-fs/etc/conf.d/confd.toml:/etc/confd/confd.toml      
     command: ["-s"]
