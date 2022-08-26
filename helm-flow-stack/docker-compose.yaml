@@ -73,7 +73,7 @@ services:
       retries: 3
 
   grafana:
-    image: ${DOCKER_REGISTRY:-docker.io}/grafana/grafana:${GRAFANA_VERSION:-latest}
+    image: ${DOCKER_REGISTRY:-docker.io}/grafana/grafana:${GRAFANA_VERSION:-8.5.10}
     container_name: grafana
     hostname: grafana
     depends_on: 
@@ -81,14 +81,14 @@ services:
     environment:
       TZ: ${TIMEZONE:-America/New_York}
       # GF_SECURITY_ADMIN_PASSWORD: mypass
-      GF_INSTALL_PLUGINS: https://github.com/OpenNMS/opennms-helm/releases/download/v7.3.0/opennms-helm-app-7.3.0.zip;opennms-helm-app,grafana-piechart-panel,neocat-cal-heatmap-panel
+      GF_INSTALL_PLUGINS: https://github.com/OpenNMS/opennms-helm/releases/download/v8.0.0/opennms-helm-app-8.0.0.zip;opennms-helm-app,grafana-piechart-panel,neocat-cal-heatmap-panel
     volumes:
       - data-grafana:/var/lib/grafana
     ports:
       - "3000:3000/tcp"
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:${KIBANA_VERSION:-7.6.2}
+    image: docker.elastic.co/kibana/kibana:${KIBANA_VERSION:-7.10.2}
     container_name: kibana
     hostname: kibana
     depends_on: 
