@@ -17,7 +17,7 @@ opennms:
     storebyforeignsource: true
 
   cassandra:
-    hostnames: cassandra-01
+    hostname: cassandra-01
     keyspace: newts
     port: 9042
     username: cassandra
