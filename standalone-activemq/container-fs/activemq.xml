@@ -17,6 +17,7 @@
 <!-- START SNIPPET: example -->
 <beans
   xmlns="http://www.springframework.org/schema/beans"
+  xmlns:amq="http://activemq.apache.org/schema/core"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
   http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
@@ -28,38 +29,35 @@
         </property>
     </bean>
 
-   <!-- Allows accessing the server log -->
-    <bean id="logQuery" class="io.fabric8.insight.log.log4j.Log4jLogQuery"
-          lazy-init="false" scope="singleton"
-          init-method="start" destroy-method="stop">
-    </bean>
-
     <!--
         The <broker> element is used to configure the ActiveMQ broker.
     -->
     <broker xmlns="http://activemq.apache.org/schema/core" brokerName="localhost" dataDirectory="${activemq.data}">
 
-        <!-- SSL Keystore configuration -->
         <!--
-        <sslContext>
+            For better performances use VM cursor and small memory limit.
+            For more information, see:
 
-          <sslContext keyStore="/opt/activemq/conf/keystore.jks" keyStorePassword="changeit" />
-        </sslContext>
+            http://activemq.apache.org/message-cursors.html
+
+            Also, if your producer is "hanging", it's probably due to producer flow control.
+            For more information, see:
+            http://activemq.apache.org/producer-flow-control.html
         -->
-
         <plugins>
-          <simpleAuthenticationPlugin>
-            <users>
-              <authenticationUser username="admin" password="admin" groups="admins,publishers,consumers" />
-              <authenticationUser username="minion" password="minion" groups="publishers,consumers" />
-            </users>
-          </simpleAuthenticationPlugin>
+            <simpleAuthenticationPlugin>
+                <users>
+                    <authenticationUser username="admin" password="admin" groups="admins,publishers,consumers" />
+                    <authenticationUser username="minion" password="minion" groups="publishers,consumers" />
+                </users>
+            </simpleAuthenticationPlugin>
         </plugins>
+
 
         <destinationPolicy>
             <policyMap>
               <policyEntries>
-                <policyEntry topic=">" >
+                <policyEntry topic=">" producerFlowControl="true">
                     <!-- The constantPendingMessageLimitStrategy is used to prevent
                          slow topic consumers to block producers and affect other consumers
                          by limiting the number of messages that are retained
@@ -71,6 +69,17 @@
                   <pendingMessageLimitStrategy>
                     <constantPendingMessageLimitStrategy limit="1000"/>
                   </pendingMessageLimitStrategy>
+                </policyEntry>
+                <policyEntry queue=">" producerFlowControl="true" memoryLimit="1mb">
+                  <!-- Use VM cursor for better latency
+                       For more information, see:
+
+                       http://activemq.apache.org/message-cursors.html
+
+                  <pendingQueuePolicy>
+                    <vmQueueCursor/>
+                  </pendingQueuePolicy>
+                  -->
                 </policyEntry>
               </policyEntries>
             </policyMap>
@@ -102,13 +111,28 @@
 
           <!--
             The systemUsage controls the maximum amount of space the broker will
-            use before disabling caching and/or slowing down producers. For more information, see:
+            use before slowing down producers. For more information, see:
             http://activemq.apache.org/producer-flow-control.html
-          -->
+            If using ActiveMQ embedded - the following limits could safely be used:
+
+        <systemUsage>
+            <systemUsage>
+                <memoryUsage>
+                    <memoryUsage limit="20 mb"/>
+                </memoryUsage>
+                <storeUsage>
+                    <storeUsage limit="1 gb"/>
+                </storeUsage>
+                <tempUsage>
+                    <tempUsage limit="100 mb"/>
+                </tempUsage>
+            </systemUsage>
+        </systemUsage>
+        -->
           <systemUsage>
             <systemUsage>
                 <memoryUsage>
-                    <memoryUsage percentOfJvmHeap="70" />
+                    <memoryUsage limit="64 mb"/>
                 </memoryUsage>
                 <storeUsage>
                     <storeUsage limit="100 gb"/>
@@ -128,12 +152,7 @@
         <transportConnectors>
             <!-- DOS protection, limit concurrent connections to 1000 and frame size to 100MB -->
             <transportConnector name="openwire" uri="tcp://0.0.0.0:61616?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
-            <!-- 
             <transportConnector name="amqp" uri="amqp://0.0.0.0:5672?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
-            <transportConnector name="stomp" uri="stomp://0.0.0.0:61613?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
-            <transportConnector name="mqtt" uri="mqtt://0.0.0.0:1883?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
-            <transportConnector name="ws" uri="ws://0.0.0.0:61614?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
-            -->
         </transportConnectors>
 
         <!-- destroy the spring context on shutdown to stop jetty -->
@@ -145,11 +164,9 @@
 
     <!--
         Enable web consoles, REST and Ajax APIs and demos
-        The web consoles requires by default login, you can disable this in the jetty.xml file
 
         Take a look at ${ACTIVEMQ_HOME}/conf/jetty.xml for more details
     -->
     <import resource="jetty.xml"/>
-
 </beans>
 <!-- END SNIPPET: example -->

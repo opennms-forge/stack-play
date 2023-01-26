@@ -2,17 +2,15 @@
 version: '3'
 services:
   minion:
-    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-bleeding}
+    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-latest}
     container_name: minion
     hostname: minion
-    sysctls:
-      net.ipv4.ping_group_range: "0 429496729"
     environment:
       TZ: ${TIMEZONE:-America/New_York}
       JAVA_MIN_MEM: 512M
       JAVA_MAX_MEM: 2048M
     volumes:
-      - ./minion-config.yaml:/opt/minion/minion-config.yaml
+      - ./container-fs/minion/opt/minion/minion-config.yaml:/opt/minion/minion-config.yaml
     command: ["-f"]
     healthcheck:
       test: "/health.sh"

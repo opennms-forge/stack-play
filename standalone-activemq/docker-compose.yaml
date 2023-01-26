@@ -5,10 +5,8 @@ volumes:
   data-activemq: {}
 
 services:
-  database:
-    image: ${DOCKER_REGISTRY:-docker.io}/no42org/activemq:${ACTIVEMQ_VERSION:-5.16.0.1360}
-    container_name: activemq
-    hostname: activemq
+  activemq:
+    image: ${DOCKER_REGISTRY:-quay.io}/labmonkeys/activemq:${ACTIVEMQ_VERSION:-5.17.4.b1580}
     environment:
       TZ: '${TIMEZONE:-America/New_York}'
     volumes:

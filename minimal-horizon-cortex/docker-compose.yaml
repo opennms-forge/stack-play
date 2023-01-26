@@ -21,7 +21,7 @@ services:
       - "9095:9095/tcp"
 
   database:
-    image: ${DOCKER_REGISTRY:-docker.io}/postgres:${POSTGRES_VERSION:-13}
+    image: ${DOCKER_REGISTRY:-docker.io}/postgres:${POSTGRES_VERSION:-15}
     container_name: database
     hostname: database
     environment:
@@ -39,11 +39,9 @@ services:
       retries: 3
 
   horizon:
-    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${HORIZON_OCI:-horizon}:${ONMS_VERSION:-bleeding}
+    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${HORIZON_OCI:-horizon}:${ONMS_VERSION:-latest}
     container_name: horizon
     hostname: horizon
-    sysctls:
-      net.ipv4.ping_group_range: "0 429496729"
     depends_on:
       - database
     environment:
@@ -66,7 +64,7 @@ services:
       retries: 3
 
   grafana:
-    image: ${DOCKER_REGISTRY:-docker.io}/grafana/grafana:${GRAFANA_VERSION:-8.5.13}
+    image: ${DOCKER_REGISTRY:-docker.io}/grafana/grafana:${GRAFANA_VERSION:-8.5.21}
     container_name: grafana
     hostname: grafana
     environment:

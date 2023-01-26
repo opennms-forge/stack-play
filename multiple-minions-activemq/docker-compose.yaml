@@ -34,8 +34,7 @@ networks:
 
 services:
   database:
-    image: ${DOCKER_REGISTRY:-docker.io}/postgres:${POSTGRES_VERSION:-13}
-    container_name: database
+    image: ${DOCKER_REGISTRY:-docker.io}/postgres:${POSTGRES_VERSION:-15}
     hostname: database
     environment:
       TZ: ${TIMEZONE:-America/New_York}
@@ -55,11 +54,8 @@ services:
       retries: 3
 
   horizon:
-    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${HORIZON_OCI:-horizon}:${ONMS_VERSION:-bleeding}
-    container_name: horizon
+    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${HORIZON_OCI:-horizon}:${ONMS_VERSION:-latest}
     hostname: horizon
-    sysctls:
-      net.ipv4.ping_group_range: "0 429496729"
     depends_on:
       - database
     environment:
@@ -88,11 +84,8 @@ services:
       retries: 3
 
   minion-lo1-1:
-    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-bleeding}
-    container_name: minion-lo1-1
+    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-latest}
     hostname: minion-lo1-1
-    sysctls:
-      net.ipv4.ping_group_range: "0 429496729"
     environment:
       TZ: ${TIMEZONE:-America/New_York}
       JAVA_MIN_MEM: 512M
@@ -114,11 +107,8 @@ services:
       - "8111:8201/tcp"
 
   minion-lo1-2:
-    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-bleeding}
-    container_name: minion-lo1-2
+    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-latest}
     hostname: minion-lo1-2
-    sysctls:
-      net.ipv4.ping_group_range: "0 429496729"
     environment:
       TZ: ${TIMEZONE:-America/New_York}
       JAVA_MIN_MEM: 512M
@@ -140,11 +130,8 @@ services:
       - "8112:8201/tcp"
 
   minion-lo1-3:
-    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-bleeding}
-    container_name: minion-lo1-3
+    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-latest}
     hostname: minion-lo1-3
-    sysctls:
-      net.ipv4.ping_group_range: "0 429496729"
     environment:
       TZ: ${TIMEZONE:-America/New_York}
       JAVA_MIN_MEM: 512M
@@ -166,11 +153,8 @@ services:
       - "8113:8201/tcp"
 
   minion-lo2-1:
-    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-bleeding}
-    container_name: minion-lo2-1
+    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-latest}
     hostname: minion-lo2-1
-    sysctls:
-      net.ipv4.ping_group_range: "0 429496729"
     environment:
       TZ: ${TIMEZONE:-America/New_York}
       JAVA_MIN_MEM: 512M
@@ -192,11 +176,8 @@ services:
       - "8121:8201/tcp"
 
   minion-lo2-2:
-    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-bleeding}
-    container_name: minion-lo2-2
+    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-latest}
     hostname: minion-lo2-2
-    sysctls:
-      net.ipv4.ping_group_range: "0 429496729"
     environment:
       TZ: ${TIMEZONE:-America/New_York}
       JAVA_MIN_MEM: 512M
@@ -218,11 +199,8 @@ services:
       - "8122:8201/tcp"
 
   minion-lo3-1:
-    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-bleeding}
-    container_name: minion-lo3-1
+    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-latest}
     hostname: minion-lo3-1
-    sysctls:
-      net.ipv4.ping_group_range: "0 429496729"
     environment:
       TZ: ${TIMEZONE:-America/New_York}
       JAVA_MIN_MEM: 512M

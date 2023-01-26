@@ -8,7 +8,7 @@ volumes:
 
 services:
   database:
-    image: ${DOCKER_REGISTRY:-docker.io}/postgres:${POSTGRES_VERSION:-13}
+    image: ${DOCKER_REGISTRY:-docker.io}/postgres:${POSTGRES_VERSION:-15}
     container_name: database
     hostname: database
     environment:
@@ -26,11 +26,9 @@ services:
       retries: 3
 
   horizon:
-    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${HORIZON_OCI:-horizon}:${ONMS_VERSION:-bleeding}
+    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${HORIZON_OCI:-horizon}:${ONMS_VERSION:-latest}
     container_name: horizon
     hostname: horizon
-    sysctls:
-      net.ipv4.ping_group_range: "0 429496729"
     depends_on:
       - database
     environment:
@@ -53,11 +51,9 @@ services:
       retries: 3
 
   minion:
-    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-bleeding}
+    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-latest}
     container_name: minion
     hostname: minion
-    sysctls:
-      net.ipv4.ping_group_range: "0 429496729"
     environment:
       TZ: ${TIMEZONE:-America/New_York}
       JAVA_MIN_MEM: 512M

@@ -11,7 +11,7 @@ volumes:
 
 services:
   zookeeper:
-    image: ${DOCKER_REGISTRY:-docker.io}/confluentinc/cp-zookeeper:${ZOOKEEPER_VERSION:-5.5.0}
+    image: ${DOCKER_REGISTRY:-docker.io}/confluentinc/cp-zookeeper:${ZOOKEEPER_VERSION:-7.3.2}
     container_name: zookeeper
     hostname: zookeeper
     environment:
@@ -20,7 +20,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
 
   broker:
-    image: ${DOCKER_REGISTRY:-docker.io}/confluentinc/cp-kafka:${KAFKA_VERSION:-5.5.0}
+    image: ${DOCKER_REGISTRY:-docker.io}/confluentinc/cp-kafka:${KAFKA_VERSION:-7.3.2}
     container_name: broker
     hostname: broker
     depends_on:
@@ -40,7 +40,7 @@ services:
       - "9092:9092/tcp"
 
   database:
-    image: ${DOCKER_REGISTRY:-docker.io}/postgres:${POSTGRES_VERSION:-13}
+    image: ${DOCKER_REGISTRY:-docker.io}/postgres:${POSTGRES_VERSION:-15}
     container_name: database
     hostname: database
     environment:
@@ -58,7 +58,7 @@ services:
       retries: 3
 
   es01:
-    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTICSEARCH_VERSION:-7.6.2}
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTICSEARCH_VERSION:-7.17.9}
     container_name: es01
     hostname: es01
     environment:
@@ -93,11 +93,9 @@ services:
       - data-cassandra-01:/var/lib/cassandra
 
   horizon:
-    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${HORIZON_OCI:-horizon}:${ONMS_VERSION:-bleeding}
+    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${HORIZON_OCI:-horizon}:${ONMS_VERSION:-latest}
     container_name: horizon
     hostname: horizon
-    sysctls:
-      net.ipv4.ping_group_range: "0 429496729"
     depends_on:
       - database
       - es01
@@ -124,11 +122,9 @@ services:
       retries: 3
 
   minion:
-    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-bleeding}
+    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-latest}
     container_name: minion
     hostname: minion
-    sysctls:
-      net.ipv4.ping_group_range: "0 429496729"
     environment:
       TZ: ${TIMEZONE:-America/New_York}
       JAVA_MIN_MEM: 512M
@@ -162,7 +158,7 @@ services:
       - "3000:3000/tcp"
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:${KIBANA_VERSION:-7.6.2}
+    image: docker.elastic.co/kibana/kibana:${KIBANA_VERSION:-7.17.9}
     container_name: kibana
     hostname: kibana
     depends_on: 
