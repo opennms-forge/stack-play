@@ -10,7 +10,7 @@ volumes:
 
 services:
   database:
-    image: ${DOCKER_REGISTRY:-docker.io}/postgres:${POSTGRES_VERSION:-13}
+    image: ${DOCKER_REGISTRY:-docker.io}/postgres:${POSTGRES_VERSION:-14}
     container_name: database
     hostname: database
     environment:
@@ -28,7 +28,7 @@ services:
       retries: 3
 
   es01:
-    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTICSEARCH_VERSION:-7.6.2}
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTICSEARCH_VERSION:-7.17.5}
     container_name: es01
     hostname: es01
     environment:
@@ -49,11 +49,9 @@ services:
       retries: 5
 
   horizon:
-    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${HORIZON_OCI:-horizon}:${ONMS_VERSION:-bleeding}
+    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${HORIZON_OCI:-horizon}:${ONMS_VERSION:-latest}
     container_name: horizon
     hostname: horizon
-    sysctls:
-      net.ipv4.ping_group_range: "0 429496729"
     depends_on:
       - database
       - es01
@@ -69,7 +67,7 @@ services:
     ports:
       - "8101:8101/tcp"
       - "8980:8980/tcp"
-      - "10162:1162/udp"
+      - "10162:162/udp"
       - "4729:4729/udp"
     healthcheck:
       test: [ "CMD", "curl", "-f", "-I", "http://localhost:8980/opennms/login.jsp" ]
@@ -78,22 +76,23 @@ services:
       retries: 3
 
   grafana:
-    image: ${DOCKER_REGISTRY:-docker.io}/grafana/grafana:${GRAFANA_VERSION:-latest}
+    image: ${DOCKER_REGISTRY:-docker.io}/grafana/grafana:${GRAFANA_VERSION:-8.5.20}
     container_name: grafana
     hostname: grafana
     depends_on: 
       - horizon
     environment:
       TZ: ${TIMEZONE:-America/New_York}
-      GF_SECURITY_ADMIN_PASSWORD: mypass
-      GF_INSTALL_PLUGINS: https://github.com/OpenNMS/opennms-helm/releases/download/v8.0.0/opennms-helm-app-8.0.0.zip;grafana-piechart-panel;neocat-cal-heatmap-panel
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_INSTALL_PLUGINS: https://github.com/OpenNMS/opennms-helm/releases/download/v8.0.4/opennms-helm-app-8.0.4.zip;grafana-piechart-panel;neocat-cal-heatmap-panel
     volumes:
       - data-grafana:/var/lib/grafana
+      - ./container-fs/gf-provisioning:/etc/grafana/provisioning/
     ports:
       - "3000:3000/tcp"
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:${KIBANA_VERSION:-7.6.2}
+    image: docker.elastic.co/kibana/kibana:${KIBANA_VERSION:-7.17.5}
     container_name: kibana
     hostname: kibana
     depends_on: 
