@@ -2,3 +2,4 @@
 .*.swp
 .idea/
 docker-compose.override.yaml
+/.project

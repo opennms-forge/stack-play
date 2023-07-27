@@ -54,6 +54,7 @@ services:
       TZ: ${TIMEZONE:-America/New_York}
       REPLICATION_FACTOR: 1
       OPENNMS_TIMESERIES_STRATEGY: newts
+      OPENNMS_CASSANDRA_DATACENTER: opennms-lab
     volumes:
       - data-opennms:/opennms-data
       - data-opennms-cfg:/opt/opennms/etc
