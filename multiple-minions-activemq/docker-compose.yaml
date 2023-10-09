@@ -45,6 +45,7 @@ services:
       POSTGRES_PASSWORD: postgres
     volumes:
       - data-postgres:/var/lib/postgresql/data
+    command: ["postgres", "-N", "200"]
     networks:
       net-core:
         ipv4_address: 192.168.1.10
