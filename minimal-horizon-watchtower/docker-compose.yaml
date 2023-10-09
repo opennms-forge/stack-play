@@ -14,7 +14,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     command: horizon --interval 30 --debug
   database:
-    image: ${DOCKER_REGISTRY:-docker.io}/postgres:${POSTGRES_VERSION:-13}
+    image: ${DOCKER_REGISTRY:-docker.io}/postgres:${POSTGRES_VERSION:-15}
     container_name: database
     hostname: database
     environment:
