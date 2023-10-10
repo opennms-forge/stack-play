@@ -40,7 +40,7 @@ services:
       - "9092:9092/tcp"
 
   database:
-    image: ${DOCKER_REGISTRY:-docker.io}/postgres:${POSTGRES_VERSION:-13}
+    image: ${DOCKER_REGISTRY:-docker.io}/postgres:${POSTGRES_VERSION:-15}
     container_name: database
     hostname: database
     environment:
@@ -59,7 +59,7 @@ services:
       retries: 3
 
   es01:
-    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTICSEARCH_VERSION:-7.6.2}
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTICSEARCH_VERSION:-7.17.9}
     container_name: es01
     hostname: es01
     environment:
@@ -148,7 +148,7 @@ services:
       - "1514:1514/udp"
 
   grafana:
-    image: ${DOCKER_REGISTRY:-docker.io}/grafana/grafana:${GRAFANA_VERSION:-6.7.2}
+    image: ${DOCKER_REGISTRY:-docker.io}/grafana/grafana:${GRAFANA_VERSION:-latest}
     container_name: grafana
     hostname: grafana
     depends_on: 

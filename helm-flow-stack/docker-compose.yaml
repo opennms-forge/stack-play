@@ -8,7 +8,7 @@ volumes:
 
 services:
   database:
-    image: ${DOCKER_REGISTRY:-docker.io}/postgres:${POSTGRES_VERSION:-13}
+    image: ${DOCKER_REGISTRY:-docker.io}/postgres:${POSTGRES_VERSION:-15}
     container_name: database
     hostname: database
     environment:
@@ -28,7 +28,7 @@ services:
 
   #Mac M1 needs to use elasticsearch for arm64 (7.10.2 is the earliest version made for arm64, might need apend -arm64 in the version)
   es01:
-    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTICSEARCH_VERSION:-7.10.2}
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTICSEARCH_VERSION:-7.17.9}
     container_name: es01
     hostname: es01
     environment:
@@ -74,7 +74,7 @@ services:
       retries: 3
 
   grafana:
-    image: ${DOCKER_REGISTRY:-docker.io}/grafana/grafana:${GRAFANA_VERSION:-8.5.10}
+    image: ${DOCKER_REGISTRY:-docker.io}/grafana/grafana:${GRAFANA_VERSION:-latest}
     container_name: grafana
     hostname: grafana
     depends_on: 

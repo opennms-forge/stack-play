@@ -18,7 +18,7 @@ services:
       - "9095:9095/tcp"
 
   grafana:
-    image: ${DOCKER_REGISTRY:-docker.io}/grafana/grafana:${GRAFANA_VERSION:-8.5.13}
+    image: ${DOCKER_REGISTRY:-docker.io}/grafana/grafana:${GRAFANA_VERSION:-latest}
     container_name: grafana
     hostname: grafana
     environment:

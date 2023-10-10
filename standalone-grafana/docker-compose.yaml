@@ -12,8 +12,9 @@ services:
     environment:
       TZ: ${TIMEZONE:-America/New_York}
       GF_SECURITY_ADMIN_PASSWORD: mypass
-      GF_INSTALL_PLUGINS: https://github.com/OpenNMS/opennms-helm/archive/v6.0.0.zip;grafana-piechart-panel;neocat-cal-heatmap-panel
+      GF_INSTALL_PLUGINS: opennms-opennms-app,grafana-piechart-panel,neocat-cal-heatmap-panel,briangann-datatable-panel
     volumes:
       - data-grafana:/var/lib/grafana
+      - ./provisioning:/etc/grafana/provisioning/
     ports:
       - "3000:3000/tcp"
