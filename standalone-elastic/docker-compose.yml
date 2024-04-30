@@ -1,0 +1,40 @@
+---
+volumes:
+  data-es01: {}
+
+services:
+  es01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTICSEARCH_VERSION:-7.17.9}
+    hostname: es01
+    environment:
+     TZ: ${TIMEZONE:-America/New_York}
+     discovery.type: single-node
+     node.name: es-node-01
+     search.max_buckets: 250000
+    ports:
+      - "9200:9200/tcp"
+      - "9300:9300/tcp"
+    volumes:
+      - data-es01:/usr/share/elasticsearch/data
+      - ./plugins:/usr/share/elasticsearch/plugins
+    healthcheck:
+      test: curl http://localhost:9200 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      interval: 30s
+      timeout: 10s
+      retries: 5
+  kibana:
+    image: docker.elastic.co/kibana/kibana:${KIBANA_VERSION:-7.17.9}
+    hostname: kibana
+    depends_on: 
+      es01:
+        condition: service_healthy
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+      ELASTICSEARCH_HOSTS: http://es01:9200
+    ports:
+      - "5601:5601/tcp"
+    healthcheck:
+      test: curl http://localhost:5601 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      interval: 30s
+      timeout: 10s
+      retries: 50
