@@ -2,7 +2,7 @@
 services:
   broker:
     container_name: kafka
-    image: quay.io/strimzi/kafka:latest-kafka-3.7.0
+    image: ${DOCKER_REGISTRY:-quay.io}/strimzi/kafka:${KAFKA_VERSION:-latest-kafka-3.7.0}
     hostname: broker
     command:
       [
@@ -35,13 +35,12 @@ services:
           memory: 2048M
 
   kafka-ui:
-    image: provectuslabs/kafka-ui:latest
+    image: ${DOCKER_REGISTRY:-docker.io}/provectuslabs/kafka-ui:${KAFKA_UI_VERSION:-latest}
     container_name: kafka-ui
     hostname: kafka-ui
     environment:
       TZ: ${TIMEZONE:-America/New_York}
       KAFKA_CLUSTERS_0_NAME: onms-kafka-standalone
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: broker:9092
-      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
     ports:
       - "8080:8080/tcp"
