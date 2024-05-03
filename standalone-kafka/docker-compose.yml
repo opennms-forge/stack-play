@@ -13,7 +13,7 @@ services:
     ports:
       - "9092:9092"
     environment:
-      TZ: Europe/Berlin
+      TZ: ${TIMEZONE:-America/New_York}
       LOG_DIR: "/tmp/logs"
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_LISTENERS: PLAINTEXT://broker:9092,PLAINTEXT_HOST://localhost:29092,CONTROLLER://:9093
