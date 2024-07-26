@@ -1,4 +1,13 @@
 .DS_Store
 .*.swp
-.idea/
 docker-compose.override.yaml
+
+# Eclipse
+.classpath
+.project
+.settings/
+ 
+# Intellij
+.idea/
+*.iml
+*.iws
