@@ -1,6 +1,4 @@
 ---
-version: '3'
-
 volumes:
   data-postgres: {}
   data-opennms: {}
@@ -9,8 +7,6 @@ volumes:
 services:
   database:
     image: ${DOCKER_REGISTRY:-docker.io}/postgres:${POSTGRES_VERSION:-15}
-    container_name: database
-    hostname: database
     environment:
       TZ: ${TIMEZONE:-America/New_York}
       POSTGRES_HOST: database
@@ -28,8 +24,6 @@ services:
 
   horizon:
     image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${HORIZON_OCI:-horizon}:${ONMS_VERSION:-bleeding}
-    container_name: horizon
-    hostname: horizon
     sysctls:
       net.ipv4.ping_group_range: "0 429496729"
     depends_on:
@@ -46,7 +40,7 @@ services:
     ports:
       - "8101:8101/tcp"
       - "8980:8980/tcp"
-      - "10162:1162/udp"
+      - "8990:8990/tcp"
     healthcheck:
       test: [ "CMD", "curl", "-f", "-I", "http://localhost:8980/opennms/login.jsp" ]
       interval: 1m
@@ -55,8 +49,9 @@ services:
 
   minion:
     image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${MINION_OCI:-minion}:${ONMS_VERSION:-bleeding}
-    container_name: minion
-    hostname: minion
+    depends_on:
+      horizon:
+        condition: service_healthy
     sysctls:
       net.ipv4.ping_group_range: "0 429496729"
     environment:
@@ -73,5 +68,5 @@ services:
       retries: 3
     ports:
       - "8201:8201/tcp"
-      - "1162:1162/udp"
-      - "1514:1514/udp"
+      - "162:1162/udp"
+      - "514:1514/udp"
