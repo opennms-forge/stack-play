@@ -1,0 +1,49 @@
+---
+apiVersion: 1
+
+datasources:
+  - name: OpenNMS Performance
+    type: opennms-performance-datasource
+    access: proxy
+    database: ""
+    orgId: 1
+    url: http://core:8980/opennms/
+    isDefault: true
+    basicAuth: true
+    basicAuthUser: admin
+    secureJsonData:
+      basicAuthPassword: admin
+  - name: OpenNMS Entity
+    type: opennms-entity-datasource
+    access: proxy
+    database: ""
+    orgId: 1
+    url: http://core:8980/opennms/
+    basicAuth: true
+    basicAuthUser: admin
+    secureJsonData:
+      basicAuthPassword: admin
+  - name: OpenNMS Flow
+    type: opennms-flow-datasource
+    access: proxy
+    database: ""
+    orgId: 1
+    url: http://core:8980/opennms/
+    basicAuth: true
+    basicAuthUser: admin
+    secureJsonData:
+      basicAuthPassword: admin
+  - name: PostgreSQL
+    type: postgres
+    access: proxy
+    database: opennms
+    url: database:5432
+    user: opennms
+    secureJsonData:
+      password: opennms
+    jsonData:
+      postgresVersion: 1500
+      sslmode: disable
+      tlsAuth: false
+      tlsSkipVerify: true
+      timescaledb: false
