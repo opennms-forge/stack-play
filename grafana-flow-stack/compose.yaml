@@ -1,0 +1,110 @@
+---
+volumes:
+  data-postgres: {}
+  data-grafana: {}
+  data-es01: {}
+
+services:
+  database:
+    image: postgres:15
+    hostname: database
+    environment:
+      TZ: UTC
+      POSTGRES_HOST: database
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - data-postgres:/var/lib/postgresql/data:delegated
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 1s
+      retries: 10
+
+  es01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.18.2
+    hostname: es01
+    environment:
+      TZ: UTC
+      discovery.type: single-node
+      node.name: es01
+      xpack.security.enabled: false
+      cluster.name: grafana-flow-stack
+    ports:
+      - "9200:9200/tcp"
+      - "9300:9300/tcp"
+    volumes:
+      - data-es01:/usr/share/elasticsearch/data
+      - ./container-fs/es01/plugins:/usr/share/elasticsearch/plugins
+    healthcheck:
+      test: curl http://localhost:9200 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  core:
+    image: opennms/horizon:latest
+    hostname: core
+    sysctls:
+      net.ipv4.ping_group_range: "0 429496729"
+    depends_on:
+      database:
+        condition: service_healthy
+      es01:
+        condition: service_healthy
+    environment:
+      TZ: UTC
+    volumes:
+      - ./container-fs/core/etc-overlay:/opt/opennms-etc-overlay
+    command: ["-s"]
+    ports:
+      - "162:1162/udp"
+      - "8101:8101/tcp"
+      - "8980:8980/tcp"
+      - "9999:9999/udp"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "-I", "http://localhost:8980/opennms/login.jsp" ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  grafana:
+    image: grafana/grafana-oss:11.5.8
+    hostname: grafana
+    deploy:
+      resources:
+        limits:
+          cpus: 2.0
+          memory: 512m
+    depends_on: 
+      core:
+        condition: service_healthy
+    environment:
+      TZ: UTC
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_INSTALL_PLUGINS: opennms-opennms-app
+      GF_FEATURE_TOGGLES_ENABLE: nestedFolders
+    volumes:
+      - data-grafana:/var/lib/grafana
+      - ./container-fs/grafana/provisioning:/etc/grafana/provisioning
+    ports:
+      - "3000:3000/tcp"
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.18.2
+    hostname: kibana
+    depends_on: 
+      es01:
+        condition: service_healthy
+    environment:
+      TZ: UTC
+      ELASTICSEARCH_HOSTS: http://es01:9200
+    ports:
+      - "5601:5601/tcp"
+    healthcheck:
+      test: curl http://localhost:5601 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      interval: 10s
+      timeout: 5s
+      retries: 20
