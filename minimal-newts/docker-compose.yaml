@@ -41,14 +41,22 @@ services:
       JMX_HOST: 127.0.0.1
     volumes:
       - data-cassandra-01:/var/lib/cassandra
+    healthcheck:
+      test: [ "CMD-SHELL", "cqlsh -e 'describe cluster'" ]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 60s
 
   horizon:
     image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${HORIZON_OCI:-horizon}:${ONMS_VERSION:-bleeding}
     container_name: horizon
     hostname: horizon
-    depends_on: 
-      - database
-      - cassandra-01
+    depends_on:
+      database:
+        condition: service_healthy
+      cassandra-01:
+        condition: service_healthy
     sysctls:
       net.ipv4.ping_group_range: "0 429496729"
     environment:
