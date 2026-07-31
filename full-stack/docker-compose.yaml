@@ -73,7 +73,7 @@ services:
       - data-es01:/usr/share/elasticsearch/data
       - ./container-fs/es01/plugins:/usr/share/elasticsearch/plugins
     healthcheck:
-      test: curl http://localhost:9200 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      test: [ "CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 5
