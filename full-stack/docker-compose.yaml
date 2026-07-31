@@ -73,7 +73,7 @@ services:
       - data-es01:/usr/share/elasticsearch/data
       - ./container-fs/es01/plugins:/usr/share/elasticsearch/plugins
     healthcheck:
-      test: curl http://localhost:9200 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      test: [ "CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -92,6 +92,12 @@ services:
       JMX_HOST: 127.0.0.1
     volumes:
       - data-cassandra-01:/var/lib/cassandra
+    healthcheck:
+      test: [ "CMD-SHELL", "cqlsh -e 'describe cluster'" ]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 60s
 
   horizon:
     image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_ORG:-opennms}/${HORIZON_OCI:-horizon}:${ONMS_VERSION:-bleeding}
@@ -100,8 +106,12 @@ services:
     sysctls:
       net.ipv4.ping_group_range: "0 429496729"
     depends_on:
-      - database
-      - es01
+      database:
+        condition: service_healthy
+      cassandra-01:
+        condition: service_healthy
+      es01:
+        condition: service_healthy
     environment:
       TZ: ${TIMEZONE:-America/New_York}
       REPLICATION_FACTOR: 1
