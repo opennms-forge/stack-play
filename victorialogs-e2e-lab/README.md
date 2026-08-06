@@ -96,6 +96,22 @@ Health check through the Karaf shell (expects "Connecting to VictoriaLogs (Flows
 ./karaf.exp 'opennms:health-check'
 ```
 
+The result should look like this:
+
+```bash
+
+Karaf extender                                 [ Success  ]
+Verifying installed bundles                    [ Success  ]
+Elasticsearch cluster health check for Flows   [ Failure  ] => Failed to connect to Elasticsearch for Flows: Connection refused
+Connecting to VictoriaLogs (Flows)             [ Success  ]
+
+=> Oh no, something is wrong
+Connection to 127.0.0.1 closed by remote host.
+```
+
+We skip the Elasticsearch connection here and the "Connection refused" error is expected.
+In a real implementation that health check won't run when VictoriaLogs for flows is enabled.
+
 Flows arriving through the REST API:
 
 ```bash
