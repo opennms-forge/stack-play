@@ -1,0 +1,90 @@
+# E2E verification lab: nl6 -> OpenNMS (ronny-poc/victorialogs-flows) -> VictoriaLogs -> Grafana Flow Deep Dive
+# See README.md for build and run instructions.
+services:
+  database:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      retries: 12
+
+  victorialogs:
+    image: victoriametrics/victoria-logs:v1.52.0
+    command: ["-storageDataPath=/victoria-logs-data"]
+    volumes:
+      - vldata:/victoria-logs-data
+    ports:
+      - "127.0.0.1:9428:9428"
+
+  opennms:
+    image: opennms/horizon:37.0.0-SNAPSHOT
+    depends_on:
+      database:
+        condition: service_healthy
+      victorialogs:
+        condition: service_started
+    command: ["-s"]
+    cap_add:
+      - NET_ADMIN
+    environment:
+      POSTGRES_HOST: database
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      OPENNMS_DBNAME: opennms
+      OPENNMS_DBUSER: opennms
+      OPENNMS_DBPASS: opennms
+    volumes:
+      - ./overlay/etc:/opt/opennms-etc-overlay
+    ports:
+      - "8980:8980"
+      - "8101:8101"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8980/opennms/login.jsp"]
+      interval: 30s
+      timeout: 5s
+      retries: 40
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    environment:
+      TZ: UTC
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_INSTALL_PLUGINS: opennms-opennms-app,victoriametrics-logs-datasource
+      GF_FEATURE_TOGGLES_ENABLE: nestedFolders
+    volumes:
+      - data-grafana:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    ports:
+      - "3001:3000"
+
+  nl6:
+    image: ghcr.io/labmonkeys-space/nl6:latest
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    devices:
+      - /dev/net/tun
+    ports:
+      - "8080:8080"
+
+  # One-shot: adds the nl6 device-subnet route inside the opennms netns.
+  # The route dies with every opennms restart - rerun this afterwards:
+  #   docker compose run --rm addroute
+  addroute:
+    image: alpine
+    profiles: [tools]
+    network_mode: service:opennms
+    cap_add:
+      - NET_ADMIN
+    depends_on:
+      opennms:
+        condition: service_started
+    command: sh -c "ip route replace 10.10.0.0/16 via $$(getent hosts nl6 | awk '{print $$1}') && ip route show | grep 10.10"
+
+volumes:
+  vldata:
+  data-grafana:

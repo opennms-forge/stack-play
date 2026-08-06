@@ -1,0 +1,9 @@
+apiVersion: 1
+
+# Imports the dashboards shipped inside the OpenNMS app plugin (Flow Deep Dive et al.)
+providers:
+  - name: opennms-plugin-dashboards
+    folder: OpenNMS
+    type: file
+    options:
+      path: /var/lib/grafana/plugins/opennms-opennms-app/dashboards

@@ -1,0 +1,5 @@
+apiVersion: 1
+
+apps:
+  - type: opennms-opennms-app
+    org_id: 1
