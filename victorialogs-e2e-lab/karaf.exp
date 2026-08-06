@@ -7,6 +7,6 @@ spawn ssh -p 8101 \
   -o HostKeyAlgorithms=+ssh-rsa -o PubkeyAuthentication=no \
   admin@localhost $cmd
 expect {
-    -re "(?i)password:" { send "admin\r"; exp_continue }
+    -nocase -re "password:" { send "admin\r"; exp_continue }
     eof
 }
