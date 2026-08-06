@@ -1,0 +1,12 @@
+#!/usr/bin/expect -f
+# Run a single Karaf shell command against OpenNMS on localhost:8101 (admin/admin)
+set timeout 30
+set cmd [lindex $argv 0]
+spawn ssh -p 8101 \
+  -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+  -o HostKeyAlgorithms=+ssh-rsa -o PubkeyAuthentication=no \
+  admin@localhost $cmd
+expect {
+    -re "(?i)password:" { send "admin\r"; exp_continue }
+    eof
+}
