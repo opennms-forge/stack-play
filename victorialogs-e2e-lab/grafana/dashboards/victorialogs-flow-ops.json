@@ -1,0 +1,536 @@
+{
+  "title": "VictoriaLogs flow store — writes and capacity",
+  "uid": "victorialogs-flow-ops",
+  "description": "Operational view of the OpenNMS → VictoriaLogs flow persister: is it writing, what is it writing, and how fast the store grows. All panels query the flow documents themselves via LogsQL — no VictoriaLogs /metrics scrape is required. Known scope limit: write errors and ingest saturation never become documents, so they are not visible here — persister errors live in the OpenNMS Karaf log (org.opennms.netmgt.flows.victorialogs) and ingest saturation in VictoriaLogs /metrics; add a VictoriaMetrics scrape if those signals are needed on a dashboard. Owner: ronny. Source: victoriametrics-logs-datasource against the OpenNMS victorialogs persister (branch ronny-poc/victorialogs-flows).",
+  "tags": ["netops", "victorialogs", "flows", "audience:engineer"],
+  "timezone": "utc",
+  "editable": true,
+  "graphTooltip": 1,
+  "schemaVersion": 39,
+  "refresh": "1m",
+  "time": { "from": "now-6h", "to": "now" },
+  "links": [
+    {
+      "type": "link",
+      "title": "Flow Deep Dive — who is talking",
+      "url": "/d/c35cc96b-da0b-4fa9-a947-6f699e24ab78/",
+      "keepTime": true,
+      "icon": "external link"
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "templating": {
+    "list": [
+      {
+        "type": "datasource",
+        "name": "datasource",
+        "label": "VictoriaLogs",
+        "query": "victoriametrics-logs-datasource",
+        "current": {},
+        "refresh": 1
+      },
+      {
+        "type": "query",
+        "name": "exporter",
+        "label": "Exporter (IP)",
+        "description": "Flow exporter, by the IP address the flow documents carry in their host field. The picker shows the IP because host is the only identifier guaranteed present on every document; panels resolve it to the requisition name where one exists.",
+        "datasource": { "type": "victoriametrics-logs-datasource", "uid": "${datasource}" },
+        "query": { "refId": "exporterVariable", "type": "fieldValue", "field": "host", "query": "*", "limit": 100 },
+        "multi": true,
+        "includeAll": true,
+        "refresh": 2,
+        "sort": 1,
+        "current": { "selected": true, "text": ["All"], "value": ["$__all"] }
+      },
+      {
+        "type": "adhoc",
+        "name": "filters",
+        "label": "Ad-hoc filters",
+        "datasource": { "type": "victoriametrics-logs-datasource", "uid": "${datasource}" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 100,
+      "type": "row",
+      "title": "Verdict — is the pipeline writing?",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "panels": []
+    },
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Flow write rate — last 5 min",
+      "description": "Average flow documents per second written to VictoriaLogs over the trailing 5 minutes, computed as LogsQL rate() over the stored documents. Normal tracks whatever the exporters send; with the nl6 lab profile this sits in the hundreds per second. Red means 0 — nothing was written for 5 minutes while exporters were presumably still sending, i.e. the persister is stalled. Check the Karaf log for persister errors, the skipVictoriaLogsPersistence gate in etc/org.opennms.features.flows.persistence.victorialogs.cfg, and remember the class of failure where another persister starved this one (fixed by per-persister isolation in PipelineImpl, commit c82936f).",
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 1 },
+      "datasource": { "type": "victoriametrics-logs-datasource", "uid": "${datasource}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "_time:5m host:in($exporter) | stats rate() as flows_per_sec",
+          "queryType": "stats"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "cps",
+          "decimals": 0,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "#D9414B" },
+              { "value": 1, "color": "#2E9E63" }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Flows stored — selected range",
+      "description": "Count of flow documents in the store whose timestamp falls inside the dashboard's time range, for the selected exporters. Normal is write rate × range; a number far below that while the rate panel looks healthy means writes are landing outside the expected time window (clock skew on an exporter). No threshold — read it against the rate panel to its left.",
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 1 },
+      "datasource": { "type": "victoriametrics-logs-datasource", "uid": "${datasource}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "host:in($exporter) | stats count() as flows",
+          "queryType": "stats"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "value": null, "color": "#2E9E63" }]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "On-disk size of range — whole store (approx)",
+      "description": "Approximate on-disk (compressed) size of the flow data in the selected time range: LogsQL block_stats summed over values, dictionary and bloom-filter bytes. Covers the whole store — the exporter filter is deliberately ignored, because block_stats counts whole storage blocks and blocks mix exporters. It is an approximation at block granularity, good for sizing and trending, not billing. If this grows while the write rate is flat, per-field cardinality is creeping — use the VictoriaLogs FAQ query linked from the growth panel below to find the offending field.",
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 1 },
+      "datasource": { "type": "victoriametrics-logs-datasource", "uid": "${datasource}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "* | block_stats | stats sum(values_bytes, dict_bytes, bloom_bytes) as on_disk_bytes",
+          "queryType": "stats"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "decimals": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "value": null, "color": "#2E9E63" }]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Documents with placeholder _msg",
+      "description": "Flow documents in the selected range that carry VictoriaLogs' literal 'missing _msg field' placeholder instead of a real log line. These are written by OpenNMS images older than df50b3e534c, which emits a human-readable _msg on every document. Normal is 0; amber means an old image is (or was) writing — already-stored placeholder documents are immutable and only age out with retention. If new placeholders keep appearing, rebuild and redeploy the OpenNMS image.",
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 1 },
+      "datasource": { "type": "victoriametrics-logs-datasource", "uid": "${datasource}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "_msg:\"missing _msg field\" | stats count() as placeholder_docs",
+          "queryType": "stats"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "#2E9E63" },
+              { "value": 1, "color": "#C08215" }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 101,
+      "type": "row",
+      "title": "Drivers — what is being written",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 6 },
+      "panels": []
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Flow write rate — by NetFlow version",
+      "description": "Flow documents written per second, split by the protocol version the exporter used (netflow.version: e.g. Netflow v5, Netflow v9, IPFIX, SFlow). Normal is one steady series per protocol the lab generates. A series dropping to a gap while others continue points at a decoder or listener problem for that protocol, not at the persister. Gaps mean no documents were stored in that interval — they are not drawn as zero.",
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 7 },
+      "datasource": { "type": "victoriametrics-logs-datasource", "uid": "${datasource}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "host:in($exporter) | stats by (netflow.version) rate() as flows_per_sec",
+          "queryType": "statsRange",
+          "legendFormat": "{{netflow.version}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "cps",
+          "decimals": 0,
+          "min": 0,
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 12,
+            "spanNulls": false,
+            "showPoints": "never",
+            "axisPlacement": "auto",
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "value": null, "color": "#2E9E63" }]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["last", "max"],
+          "sortBy": "Max",
+          "sortDesc": true
+        },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      }
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Flow write rate — by exporter",
+      "description": "Flow documents written per second per exporter. The series name is the exporter's requisition foreign id where OpenNMS matched the exporter to a node, falling back to the raw exporter IP (the host field) where it did not — a series named by bare IP therefore also tells you that exporter is unprovisioned. One exporter going quiet while the rest continue is an exporter or routing problem, not a persister problem. Click a series to open Flow Deep Dive for the same time range.",
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 7 },
+      "datasource": { "type": "victoriametrics-logs-datasource", "uid": "${datasource}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "host:in($exporter) | coalesce(node_exporter.foreign_id, host) as exporter_name | stats by (exporter_name) rate() as flows_per_sec",
+          "queryType": "statsRange",
+          "legendFormat": "{{exporter_name}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "cps",
+          "decimals": 0,
+          "min": 0,
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 12,
+            "spanNulls": false,
+            "showPoints": "never",
+            "axisPlacement": "auto",
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "value": null, "color": "#2E9E63" }]
+          },
+          "links": [
+            {
+              "title": "Flow Deep Dive for this time range",
+              "url": "/d/c35cc96b-da0b-4fa9-a947-6f699e24ab78/?${__url_time_range}"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["last", "max"],
+          "sortBy": "Max",
+          "sortDesc": true
+        },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      }
+    },
+    {
+      "id": 102,
+      "type": "row",
+      "title": "Capacity — storage growth",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 16 },
+      "panels": []
+    },
+    {
+      "id": 7,
+      "type": "barchart",
+      "title": "Storage written per day — on disk (approx)",
+      "description": "Approximate on-disk (compressed) bytes the flow store holds per calendar day: block_stats values, dictionary and bloom-filter bytes summed per VictoriaLogs partition (partitions are per-day). Always shows the last 7 days regardless of the dashboard time range. Whole store — the exporter filter is ignored, because block_stats counts whole storage blocks and blocks mix exporters; today's bar is still being written and background merges re-compress older partitions, so read the trend, not individual bars. Normal is proportional to the write rate; growth rising against a flat write rate means field-value cardinality is creeping. Multiply the daily figure by your intended retention (-retentionPeriod) to size the vldata volume; to find which field eats the space, run the block_stats query from the VictoriaLogs FAQ linked on this panel.",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 17 },
+      "timeFrom": "7d",
+      "hideTimeOverride": false,
+      "datasource": { "type": "victoriametrics-logs-datasource", "uid": "${datasource}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "* | block_stats | extract_regexp \"partitions/(?P<y>[0-9]{4})(?P<m>[0-9]{2})(?P<d>[0-9]{2})/\" from part_path | format \"<y>-<m>-<d>\" as day | stats by (day) sum(values_bytes, dict_bytes, bloom_bytes) as on_disk_bytes | sort by (day)",
+          "queryType": "instant"
+        }
+      ],
+      "transformations": [
+        { "id": "extractFields", "options": { "source": "labels", "replace": true } },
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [{ "targetField": "on_disk_bytes", "destinationType": "number" }]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": { "day": "Day", "on_disk_bytes": "On-disk size" }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "decimals": 1,
+          "min": 0,
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "fillOpacity": 60,
+            "lineWidth": 1
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "value": null, "color": "#2E9E63" }]
+          },
+          "links": [
+            {
+              "title": "Which field occupies the disk — VictoriaLogs FAQ",
+              "url": "https://docs.victoriametrics.com/victorialogs/faq/#how-to-determine-which-log-fields-occupy-the-most-of-disk-space",
+              "targetBlank": true
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "auto",
+        "xTickLabelRotation": 0,
+        "showValue": "auto",
+        "legend": { "showLegend": false },
+        "tooltip": { "mode": "single", "sort": "none" }
+      }
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Traffic represented per day",
+      "description": "Sum of netflow.bytes per day for the selected exporters — the network traffic the stored flows describe, not what VictoriaLogs stores. Always shows the last 7 days regardless of the dashboard time range, so the 1-day buckets stay visible. Read it against the on-disk panel to its left: the ratio is your storage cost per byte of monitored traffic, the number that turns a growth trend into a capacity forecast. Normal follows the exporters' traffic profile. This is flow-reported volume and inherits any sampling the exporters apply.",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 17 },
+      "timeFrom": "7d",
+      "hideTimeOverride": false,
+      "datasource": { "type": "victoriametrics-logs-datasource", "uid": "${datasource}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "host:in($exporter) | stats sum(netflow.bytes) as traffic_bytes",
+          "queryType": "statsRange",
+          "step": "1d",
+          "legendFormat": "traffic represented per day"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "decimals": 1,
+          "min": 0,
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 60,
+            "spanNulls": false,
+            "showPoints": "never",
+            "axisPlacement": "auto",
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "value": null, "color": "#2E9E63" }]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "showLegend": false },
+        "tooltip": { "mode": "single", "sort": "none" }
+      }
+    },
+    {
+      "id": 103,
+      "type": "row",
+      "title": "Evidence — raw detail",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 25 },
+      "panels": []
+    },
+    {
+      "id": 9,
+      "type": "table",
+      "title": "Top exporters — selected range",
+      "description": "The ten busiest exporters in the selected range by stored flow count, with the traffic volume their flows describe. Exporter is the requisition foreign id where OpenNMS matched a node, otherwise the raw IP; the Exporter IP column always carries the technical identifier for CLI use. An exporter you expect to see missing from this list is the fastest way to spot a silent sender.",
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 26 },
+      "datasource": { "type": "victoriametrics-logs-datasource", "uid": "${datasource}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "host:in($exporter) | coalesce(node_exporter.foreign_id, host) as exporter_name | stats by (exporter_name, host) count() as flows, sum(netflow.bytes) as traffic_bytes | sort by (flows desc) | limit 10",
+          "queryType": "instant"
+        }
+      ],
+      "transformations": [
+        { "id": "extractFields", "options": { "source": "labels", "replace": true } },
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              { "targetField": "flows", "destinationType": "number" },
+              { "targetField": "traffic_bytes", "destinationType": "number" }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "exporter_name": "Exporter",
+              "host": "Exporter IP",
+              "flows": "Flows",
+              "traffic_bytes": "Traffic"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "value": null, "color": "#2E9E63" }]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Traffic" },
+            "properties": [
+              { "id": "unit", "value": "bytes" },
+              { "id": "decimals", "value": 1 }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [{ "displayName": "Flows", "desc": true }]
+      }
+    },
+    {
+      "id": 10,
+      "type": "logs",
+      "title": "Recent flow documents",
+      "description": "The newest stored flow documents for the selected exporters, rendered as their _msg line — e.g. 'Netflow v9 ingress tcp 192.168.1.1:51000 -> 10.0.0.1:443 https 1000 bytes 10 packets'. Use it to eyeball what the persister is actually writing; expand a line to see every structured netflow.* field. A line reading 'missing _msg field …' is a pre-df50b3e534c document (see the placeholder stat above).",
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 26 },
+      "datasource": { "type": "victoriametrics-logs-datasource", "uid": "${datasource}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "host:in($exporter)",
+          "queryType": "instant",
+          "maxLines": 50
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": false,
+        "enableLogDetails": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      }
+    }
+  ]
+}

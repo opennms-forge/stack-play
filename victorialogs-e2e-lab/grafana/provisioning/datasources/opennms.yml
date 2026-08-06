@@ -28,5 +28,8 @@ datasources:
       basicAuthPassword: admin
   - name: VictoriaLogs
     type: victoriametrics-logs-datasource
+    # Fixed uid: the flow-ops dashboard's ${datasource} variable and its drill-down
+    # links resolve to this — never let Grafana auto-generate it.
+    uid: victorialogs
     access: proxy
     url: http://victorialogs:9428

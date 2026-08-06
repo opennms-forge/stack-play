@@ -1,0 +1,10 @@
+apiVersion: 1
+
+# Lab-authored dashboards (file-authored, provisioned read-only — edit the JSON, not the UI)
+providers:
+  - name: victorialogs-lab-dashboards
+    folder: VictoriaLogs
+    type: file
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards-victorialogs
