@@ -58,6 +58,7 @@ services:
     volumes:
       - data-grafana:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards-victorialogs
     ports:
       - "3001:3000"
 
